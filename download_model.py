@@ -17,7 +17,7 @@ import urllib.request
 #      https://drive.google.com/file/d/FILE_ID_HERE/view
 #   4. Replace FILE_ID_HERE below
 # ─────────────────────────────────────────────────────────
-MODEL_FILE_ID = "15EjnkQEZ-15EjnkQEZ-HGxj2PLKOKPLwpphuNsojmr"
+MODEL_FILE_ID = "17Xhz_Jygy99Fg5PO2dNfOQhfoKkZFB7M"
 MODEL_NAME    = "wall_crack.pt"
 
 def download_from_gdrive(file_id, dest):
