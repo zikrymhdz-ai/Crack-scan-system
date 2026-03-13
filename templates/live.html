@@ -1,0 +1,1160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CrackScan — Live AI Detection</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #070b0f;
+            --panel: #0d1318;
+            --panel2: #111820;
+            --border: #1e2d3d;
+            --accent: #00d4ff;
+            --accent2: #ff4444;
+            --warn: #ffaa00;
+            --safe: #00ff88;
+            --text: #c8d8e8;
+            --dim: #4a6070;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Exo 2', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: radial-gradient(ellipse at 20% 50%, rgba(0,50,80,0.15) 0%, transparent 60%), radial-gradient(ellipse at 80% 50%, rgba(80,0,30,0.1) 0%, transparent 60%);
+        }
+
+            body::before {
+                content: '';
+                position: fixed;
+                inset: 0;
+                background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+                pointer-events: none;
+                z-index: 100;
+            }
+
+        /* HEADER */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel);
+        }
+
+        .logo {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.6em;
+            font-weight: 700;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--accent);
+            text-shadow: 0 0 15px rgba(0,212,255,0.5);
+            text-decoration: none;
+        }
+
+            .logo span {
+                color: var(--accent2);
+            }
+
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85em;
+            color: var(--accent2);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+            .live-badge.active {
+                opacity: 1;
+            }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent2);
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%,100% {
+                opacity: 1
+            }
+
+            50% {
+                opacity: 0.2
+            }
+        }
+
+        .header-time {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85em;
+            color: var(--dim);
+        }
+
+        /* LAYOUT */
+        .app {
+            display: grid;
+            grid-template-columns: 200px 1fr 220px;
+            height: calc(100vh - 54px);
+        }
+
+        /* LEFT PANEL */
+        .left-panel {
+            background: var(--panel);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 14px;
+            gap: 10px;
+        }
+
+        .panel-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65em;
+            letter-spacing: 3px;
+            color: var(--dim);
+            text-transform: uppercase;
+            padding: 0 4px;
+            margin-bottom: 4px;
+        }
+
+        .divider {
+            height: 1px;
+            background: var(--border);
+            margin: 6px 0;
+        }
+
+        .ctrl-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s;
+            color: var(--text);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 0.88em;
+            font-weight: 600;
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .ctrl-btn::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 3px;
+                border-radius: 2px;
+                background: var(--border);
+                transition: background 0.25s;
+            }
+
+            .ctrl-btn:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+                transform: translateX(3px);
+            }
+
+                .ctrl-btn:hover::before {
+                    background: var(--accent);
+                }
+
+            .ctrl-btn.active {
+                border-color: var(--accent);
+                color: var(--accent);
+                background: rgba(0,212,255,0.07);
+            }
+
+                .ctrl-btn.active::before {
+                    background: var(--accent);
+                }
+
+            .ctrl-btn.pulsing {
+                border-color: var(--accent2);
+                color: var(--accent2);
+                background: rgba(255,68,68,0.08);
+                animation: pulse-border 2s ease-in-out infinite;
+            }
+
+                .ctrl-btn.pulsing::before {
+                    background: var(--accent2);
+                }
+
+        @keyframes pulse-border {
+            0%,100% {
+                box-shadow: 0 0 0 0 rgba(255,68,68,0.2)
+            }
+
+            50% {
+                box-shadow: 0 0 0 6px rgba(255,68,68,0)
+            }
+        }
+
+        .ctrl-btn.disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .btn-num {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7em;
+            color: var(--dim);
+            background: var(--bg);
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-icon {
+            font-size: 1.1em;
+        }
+
+        .btn-text {
+            line-height: 1.2;
+        }
+
+        .btn-sub {
+            font-size: 0.7em;
+            color: var(--dim);
+            font-weight: 400;
+        }
+
+        /* CENTER */
+        .center-panel {
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .camera-wrap {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* AI stream — server MJPEG */
+        #aiStream {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 2;
+            display: none;
+        }
+
+            #aiStream.active {
+                display: block;
+            }
+
+        /* Browser edge canvas */
+        #edgeCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 2;
+            display: none;
+        }
+
+            #edgeCanvas.active {
+                display: block;
+            }
+
+        /* Hidden video for browser edge mode */
+        #videoEl {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 1;
+        }
+
+        .corner {
+            position: absolute;
+            width: 28px;
+            height: 28px;
+        }
+
+            .corner.tl {
+                top: 14px;
+                left: 14px;
+                border-top: 2px solid var(--accent);
+                border-left: 2px solid var(--accent);
+            }
+
+            .corner.tr {
+                top: 14px;
+                right: 14px;
+                border-top: 2px solid var(--accent);
+                border-right: 2px solid var(--accent);
+            }
+
+            .corner.bl {
+                bottom: 14px;
+                left: 14px;
+                border-bottom: 2px solid var(--accent);
+                border-left: 2px solid var(--accent);
+            }
+
+            .corner.br {
+                bottom: 14px;
+                right: 14px;
+                border-bottom: 2px solid var(--accent);
+                border-right: 2px solid var(--accent);
+            }
+
+        .scan-line {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            z-index: 4;
+            opacity: 0;
+            top: 0;
+        }
+
+            .scan-line.active {
+                opacity: 0.6;
+                animation: scan 3s ease-in-out infinite;
+            }
+
+        @keyframes scan {
+            0% {
+                top: 10%;
+                opacity: 0
+            }
+
+            10% {
+                opacity: 0.6
+            }
+
+            90% {
+                opacity: 0.6
+            }
+
+            100% {
+                top: 90%;
+                opacity: 0
+            }
+        }
+
+        .mode-badge {
+            position: absolute;
+            top: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 6;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.7em;
+            letter-spacing: 2px;
+            padding: 4px 12px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.7);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+        }
+
+        /* Idle overlay */
+        #idleOverlay {
+            position: absolute;
+            inset: 0;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(7,11,15,0.92);
+            gap: 16px;
+            transition: opacity 0.5s;
+        }
+
+            #idleOverlay.hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+        .idle-icon {
+            font-size: 3em;
+            opacity: 0.4;
+        }
+
+        .idle-text {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.4em;
+            font-weight: 600;
+            color: var(--dim);
+            letter-spacing: 2px;
+        }
+
+        .idle-sub {
+            font-size: 0.85em;
+            color: var(--dim);
+            opacity: 0.6;
+        }
+
+        /* AI badge on idle */
+        .idle-ai-badge {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72em;
+            padding: 6px 14px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            color: var(--dim);
+        }
+
+            .idle-ai-badge.ready {
+                border-color: var(--safe);
+                color: var(--safe);
+            }
+
+        /* Status bar */
+        .cam-statusbar {
+            padding: 8px 18px;
+            background: var(--panel);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.72em;
+            color: var(--dim);
+        }
+
+            .cam-statusbar .sep {
+                color: var(--border);
+            }
+
+        #statusMsg {
+            color: var(--text);
+        }
+
+        .frame-counter {
+            margin-left: auto;
+        }
+
+        /* RIGHT PANEL */
+        .right-panel {
+            background: var(--panel);
+            border-left: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 16px 14px;
+            gap: 12px;
+            overflow-y: auto;
+        }
+
+        .severity-card {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+            .severity-card::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 4px;
+                border-radius: 2px;
+                background: var(--safe);
+                transition: background 0.4s;
+            }
+
+            .severity-card.warn::before {
+                background: var(--warn);
+            }
+
+            .severity-card.danger::before {
+                background: var(--accent2);
+            }
+
+            .severity-card.minor::before {
+                background: #88ff00;
+            }
+
+        .sev-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.62em;
+            letter-spacing: 3px;
+            color: var(--dim);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .sev-value {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--safe);
+            transition: color 0.4s;
+        }
+
+        .severity-card.minor .sev-value {
+            color: #88ff00;
+        }
+
+        .severity-card.warn .sev-value {
+            color: var(--warn);
+        }
+
+        .severity-card.danger .sev-value {
+            color: var(--accent2);
+        }
+
+        .sev-bar-wrap {
+            margin-top: 10px;
+            height: 4px;
+            background: rgba(255,255,255,0.07);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .sev-bar {
+            height: 100%;
+            width: 0%;
+            background: var(--safe);
+            border-radius: 2px;
+            transition: width 0.4s, background 0.4s;
+        }
+
+        .severity-card.minor .sev-bar {
+            background: #88ff00;
+        }
+
+        .severity-card.warn .sev-bar {
+            background: var(--warn);
+        }
+
+        .severity-card.danger .sev-bar {
+            background: var(--accent2);
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .metric {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+        }
+
+        .metric-label {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.58em;
+            letter-spacing: 2px;
+            color: var(--dim);
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .metric-value {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.3em;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .history-wrap {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        #histChart {
+            width: 100%;
+            height: 60px;
+            display: block;
+        }
+
+        .legend {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8em;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+        }
+
+            .legend-item:last-child {
+                border-bottom: none;
+            }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .legend-name {
+            font-weight: 600;
+            min-width: 60px;
+        }
+
+        .legend-desc {
+            color: var(--dim);
+            font-size: 0.85em;
+        }
+
+        /* AI info box */
+        .ai-info {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .ai-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.8em;
+        }
+
+            .ai-row:last-child {
+                border-bottom: none;
+            }
+
+        .ai-key {
+            color: var(--dim);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85em;
+        }
+
+        .ai-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+
+        @media (max-width: 900px) {
+            .app {
+                grid-template-columns: 72px 1fr 72px;
+            }
+
+            .btn-text, .btn-sub, .panel-label {
+                display: none;
+            }
+
+            .ctrl-btn {
+                justify-content: center;
+                padding: 12px;
+            }
+
+            .right-panel {
+                padding: 10px 6px;
+            }
+
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <header class="header">
+        <a href="/" class="logo">Crack<span>Scan</span></a>
+        <div class="live-badge" id="liveBadge"><div class="live-dot"></div> LIVE AI</div>
+        <div class="header-time" id="clock">--:--:--</div>
+    </header>
+
+    <div class="app">
+
+        <!-- LEFT PANEL -->
+        <aside class="left-panel">
+            <div class="panel-label">Mode</div>
+
+            <button class="ctrl-btn active" id="btnAI" onclick="setMode('ai')">
+                <span class="btn-num">1</span>
+                <span class="btn-icon">🤖</span>
+                <span class="btn-text">AI Stream<br><span class="btn-sub">YOLOv8 Server</span></span>
+            </button>
+
+            <button class="ctrl-btn" id="btnEdge" onclick="setMode('edge')">
+                <span class="btn-num">2</span>
+                <span class="btn-icon">⬡</span>
+                <span class="btn-text">Edge Only<br><span class="btn-sub">Browser</span></span>
+            </button>
+
+            <div class="divider"></div>
+            <div class="panel-label">Actions</div>
+
+            <button class="ctrl-btn" id="btnStart" onclick="toggleStream()">
+                <span class="btn-num">3</span>
+                <span class="btn-icon">▶</span>
+                <span class="btn-text">Start<br><span class="btn-sub">Analysis</span></span>
+            </button>
+
+            <button class="ctrl-btn disabled" id="btnCapture" onclick="captureFrame()">
+                <span class="btn-num">4</span>
+                <span class="btn-icon">⊙</span>
+                <span class="btn-text">Capture<br><span class="btn-sub">Save Frame</span></span>
+            </button>
+
+            <div class="divider"></div>
+
+            <a href="/" class="ctrl-btn">
+                <span class="btn-num">5</span>
+                <span class="btn-icon">⌂</span>
+                <span class="btn-text">Home</span>
+            </a>
+        </aside>
+
+        <!-- CENTER CAMERA -->
+        <main class="center-panel">
+            <div class="camera-wrap" id="cameraInner">
+                <video id="videoEl" autoplay muted playsinline></video>
+                <img id="aiStream" src="" alt="AI Stream">
+                <canvas id="edgeCanvas"></canvas>
+
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+                <div class="scan-line" id="scanLine"></div>
+                <div class="mode-badge" id="modeBadge">SELECT MODE</div>
+
+                <div id="idleOverlay">
+                    <div class="idle-icon">⬡</div>
+                    <div class="idle-text">CRACKSCAN READY</div>
+                    <div class="idle-sub">Press START to begin live detection</div>
+                    <div class="idle-ai-badge {% if ai_ready %}ready{% endif %}" id="aiBadge">
+                        {% if ai_ready %}✅ AI: {{ model_name }}{% else %}⚠️ Edge Detection Only{% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="cam-statusbar">
+                <span id="statusMsg">Idle — awaiting start</span>
+                <span class="sep">|</span>
+                <span id="modeText">—</span>
+                <span class="sep">|</span>
+                <span id="fpsText">0 FPS</span>
+                <span class="frame-counter" id="frameCount">AI Boxes: 0</span>
+            </div>
+        </main>
+
+        <!-- RIGHT PANEL -->
+        <aside class="right-panel">
+            <div class="panel-label">Severity</div>
+
+            <div class="severity-card" id="severityCard">
+                <div class="sev-label">Status</div>
+                <div class="sev-value" id="sevValue">SAFE</div>
+                <div class="sev-bar-wrap"><div class="sev-bar" id="sevBar"></div></div>
+            </div>
+
+            <div class="metric-grid">
+                <div class="metric">
+                    <div class="metric-label">Area</div>
+                    <div class="metric-value" id="metArea">0 px</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Level</div>
+                    <div class="metric-value" id="metLevel">0 / 3</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">Coverage</div>
+                    <div class="metric-value" id="metCoverage">0.0%</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-label">AI Boxes</div>
+                    <div class="metric-value" id="metBoxes">0</div>
+                </div>
+            </div>
+
+            <!-- History sparkline -->
+            <div class="history-wrap">
+                <div class="panel-label" style="margin-bottom:6px">Crack History</div>
+                <canvas id="histChart"></canvas>
+            </div>
+
+            <!-- AI info -->
+            <div class="ai-info">
+                <div class="panel-label" style="margin-bottom:6px">Detection Info</div>
+                <div class="ai-row">
+                    <span class="ai-key">MODEL</span>
+                    <span class="ai-val" id="infoModel">{{ model_name if ai_ready else 'Edge Only' }}</span>
+                </div>
+                <div class="ai-row">
+                    <span class="ai-key">MODE</span>
+                    <span class="ai-val" id="infoMode">—</span>
+                </div>
+                <div class="ai-row">
+                    <span class="ai-key">FPS</span>
+                    <span class="ai-val" id="infoFps">0</span>
+                </div>
+                <div class="ai-row">
+                    <span class="ai-key">STATUS</span>
+                    <span class="ai-val" id="infoStatus" style="color:var(--safe)">IDLE</span>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="panel-label" style="margin-bottom:6px">Severity Guide</div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:var(--safe)"></div>
+                    <span class="legend-name" style="color:var(--safe)">Safe</span>
+                    <span class="legend-desc">No cracks</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:#88ff00"></div>
+                    <span class="legend-name" style="color:#88ff00">Minor</span>
+                    <span class="legend-desc">&lt;50px hairline</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:var(--warn)"></div>
+                    <span class="legend-name" style="color:var(--warn)">Medium</span>
+                    <span class="legend-desc">50–8k px</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-dot" style="background:var(--accent2)"></div>
+                    <span class="legend-name" style="color:var(--accent2)">Severe</span>
+                    <span class="legend-desc">&gt;8k px — Act now</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        // ── STATE ──
+        let currentMode  = 'ai';   // 'ai' | 'edge'
+        let isRunning    = false;
+        let statsInterval = null;
+        let edgeAnimId   = null;
+        let edgeStream   = null;
+        let history      = [];
+        const MAX_HIST   = 60;
+
+        // ── CLOCK ──
+        function tick() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }
+        setInterval(tick, 1000); tick();
+
+        // ── MODE SWITCH ──
+        function setMode(mode) {
+        currentMode = mode;
+        document.getElementById('btnAI').classList.toggle('active', mode === 'ai');
+        document.getElementById('btnEdge').classList.toggle('active', mode === 'edge');
+        document.getElementById('modeBadge').textContent = mode === 'ai' ? 'AI MODE — YOLOv8' : 'EDGE MODE — Browser';
+        document.getElementById('infoMode').textContent  = mode === 'ai' ? 'Server AI' : 'Browser Edge';
+        document.getElementById('modeText').textContent  = mode === 'ai' ? 'AI Stream' : 'Edge Only';
+
+        if (isRunning) {
+        stopAll();
+        setTimeout(() => startAll(), 300);
+        }
+        }
+
+        // ── TOGGLE START/STOP ──
+        function toggleStream() {
+        if (!isRunning) startAll(); else stopAll();
+        }
+
+        function startAll() {
+        isRunning = true;
+        document.getElementById('idleOverlay').classList.add('hidden');
+        document.getElementById('liveBadge').classList.add('active');
+        document.getElementById('scanLine').classList.add('active');
+        document.getElementById('btnCapture').classList.remove('disabled');
+        const btn = document.getElementById('btnStart');
+        btn.innerHTML = `<span class="btn-num">3</span><span class="btn-icon">⏹</span><span class="btn-text">Stop<br><span class="btn-sub">Analysis</span></span>`;
+        btn.classList.add('pulsing');
+        document.getElementById('infoStatus').textContent = 'RUNNING';
+        document.getElementById('infoStatus').style.color = 'var(--accent2)';
+
+        if (currentMode === 'ai') startAIStream();
+        else startEdgeStream();
+        }
+
+        function stopAll() {
+        isRunning = false;
+        stopAIStream();
+        stopEdgeStream();
+        document.getElementById('idleOverlay').classList.remove('hidden');
+        document.getElementById('liveBadge').classList.remove('active');
+        document.getElementById('scanLine').classList.remove('active');
+        document.getElementById('btnCapture').classList.add('disabled');
+        const btn = document.getElementById('btnStart');
+        btn.innerHTML = `<span class="btn-num">3</span><span class="btn-icon">▶</span><span class="btn-text">Start<br><span class="btn-sub">Analysis</span></span>`;
+        btn.classList.remove('pulsing');
+        document.getElementById('statusMsg').textContent = 'Stopped';
+        document.getElementById('infoStatus').textContent = 'IDLE';
+        document.getElementById('infoStatus').style.color = 'var(--safe)';
+        fetch('/stop_camera', { method: 'POST' });
+        }
+
+        // ── AI STREAM (Option B) ──
+        function startAIStream() {
+        const img = document.getElementById('aiStream');
+        const canvas = document.getElementById('edgeCanvas');
+        img.src = '/video_feed?' + Date.now();
+        img.classList.add('active');
+        canvas.classList.remove('active');
+        document.getElementById('statusMsg').textContent = 'AI stream active — YOLOv8 running';
+
+        // Poll stats from server every 500ms
+        statsInterval = setInterval(fetchStats, 500);
+        }
+
+        function stopAIStream() {
+        const img = document.getElementById('aiStream');
+        img.src = '';
+        img.classList.remove('active');
+        if (statsInterval) { clearInterval(statsInterval); statsInterval = null; }
+        }
+
+        async function fetchStats() {
+        try {
+        const res  = await fetch('/live_stats');
+        const data = await res.json();
+        updateUI(data.level, data.area, data.coverage, data.ai_boxes, data.fps);
+        document.getElementById('statusMsg').textContent =
+        `AI active — ${data.status} | ${data.fps} FPS`;
+        } catch(e) {}
+        }
+
+        // ── EDGE STREAM (Browser fallback) ──
+        async function startEdgeStream() {
+        const canvas = document.getElementById('edgeCanvas');
+        const video  = document.getElementById('videoEl');
+        const img    = document.getElementById('aiStream');
+        img.classList.remove('active');
+        canvas.classList.add('active');
+
+        try {
+        edgeStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:720} }
+        });
+        video.srcObject = edgeStream;
+        video.onloadedmetadata = () => {
+        document.getElementById('statusMsg').textContent = 'Edge detection active — browser mode';
+        runEdgeLoop();
+        };
+        } catch(e) {
+        document.getElementById('statusMsg').textContent = `Camera error: ${e.name}`;
+        }
+        }
+
+        function stopEdgeStream() {
+        if (edgeAnimId) { cancelAnimationFrame(edgeAnimId); edgeAnimId = null; }
+        if (edgeStream) { edgeStream.getTracks().forEach(t => t.stop()); edgeStream = null; }
+        document.getElementById('edgeCanvas').classList.remove('active');
+        }
+
+        function runEdgeLoop() {
+        const canvas = document.getElementById('edgeCanvas');
+        const ctx    = canvas.getContext('2d');
+        const video  = document.getElementById('videoEl');
+        let frameCount = 0, lastFps = performance.now();
+
+        function loop() {
+        if (!isRunning || currentMode !== 'edge') return;
+        if (!video.videoWidth) { edgeAnimId = requestAnimationFrame(loop); return; }
+
+        canvas.width  = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0);
+
+        const W = canvas.width, H = canvas.height;
+        const imgData = ctx.getImageData(0,0,W,H);
+        const px = imgData.data;
+
+        // Grayscale
+        const gray = new Uint8Array(W*H);
+        for (let i=0; i<px.length; i+=4)
+        gray[i>>2] = (px[i]*0.3 + px[i+1]*0.59 + px[i+2]*0.11)|0;
+
+        // Blur
+        const blur = new Uint8Array(gray);
+        for (let y=2;y<H-2;y++) for (let x=2;x<W-2;x++) {
+        let s=0,w=0;
+        for (let dy=-2;dy<=2;dy++) for (let dx=-2;dx<=2;dx++) {
+        const wt=6-Math.abs(dx)-Math.abs(dy);
+        s+=gray[(y+dy)*W+(x+dx)]*wt; w+=wt;
+        }
+        blur[y*W+x]=s/w;
+        }
+
+        // Sobel
+        const edges = new Uint8Array(W*H);
+        const sx=[-1,0,1,-2,0,2,-1,0,1], sy=[-1,-2,-1,0,0,0,1,2,1];
+        for (let y=1;y<H-1;y++) for (let x=1;x<W-1;x++) {
+        let gx=0,gy=0;
+        for (let k=0;k<9;k++) {
+        const idx=(y-1+~~(k/3))*W+(x-1+(k%3));
+        gx+=blur[idx]*sx[k]; gy+=blur[idx]*sy[k];
+        }
+        edges[y*W+x]=Math.sqrt(gx*gx+gy*gy)>50?255:0;
+        }
+
+        // Morphology
+        function dilate(img){const r=new Uint8Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const nb=[img[(y-1)*W+x-1],img[(y-1)*W+x],img[(y-1)*W+x+1],img[y*W+x-1],img[y*W+x],img[y*W+x+1],img[(y+1)*W+x-1],img[(y+1)*W+x],img[(y+1)*W+x+1]];r[y*W+x]=nb.some(v=>v===255)?255:0;}return r;}
+        function erode(img){const r=new Uint8Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const nb=[img[(y-1)*W+x-1],img[(y-1)*W+x],img[(y-1)*W+x+1],img[y*W+x-1],img[y*W+x],img[y*W+x+1],img[(y+1)*W+x-1],img[(y+1)*W+x],img[(y+1)*W+x+1]];r[y*W+x]=nb.every(v=>v===255)?255:0;}return r;}
+        const final = erode(dilate(edges));
+
+        let crackPx = 0;
+        for (let i=0;i<final.length;i++) {
+        if (final[i]===255) {
+        crackPx++;
+        ctx.fillStyle='rgba(255,30,30,0.75)';
+        ctx.fillRect(i%W, ~~(i/W), 1, 1);
+        }
+        }
+
+        const area     = Math.round(crackPx/4);
+        const coverage = ((crackPx/(W*H))*100).toFixed(2);
+        const level    = area<50?0:area<2500?1:area<8000?2:3;
+        updateUI(level, area, coverage, 0, 0);
+
+        frameCount++;
+        const now = performance.now();
+        if (now - lastFps > 1000) {
+        const fps = Math.round(frameCount/((now-lastFps)/1000));
+        document.getElementById('fpsText').textContent = `${fps} FPS`;
+        document.getElementById('infoFps').textContent = fps;
+        lastFps=now; frameCount=0;
+        }
+        edgeAnimId = requestAnimationFrame(loop);
+        }
+        loop();
+        }
+
+        // ── UI UPDATE ──
+        function updateUI(level, area, coverage, aiBoxes, fps) {
+        const card = document.getElementById('severityCard');
+        const sevVal = document.getElementById('sevValue');
+        const sevBar = document.getElementById('sevBar');
+        const labels = ['SAFE','MINOR','MEDIUM','SEVERE'];
+        const classes = ['','minor','warn','danger'];
+        const barW = ['5%','33%','66%','100%'];
+
+        card.className = 'severity-card ' + (classes[level]||'');
+        sevVal.textContent  = labels[level];
+        sevBar.style.width  = barW[level];
+
+        document.getElementById('metArea').textContent     = area>999?`${(area/1000).toFixed(1)}k px`:`${area} px`;
+        document.getElementById('metLevel').textContent    = `${level} / 3`;
+        document.getElementById('metCoverage').textContent = `${coverage}%`;
+        document.getElementById('metBoxes').textContent    = aiBoxes;
+        document.getElementById('frameCount').textContent  = `AI Boxes: ${aiBoxes}`;
+        if (fps) {
+        document.getElementById('fpsText').textContent = `${fps} FPS`;
+        document.getElementById('infoFps').textContent = fps;
+        }
+
+        history.push(area);
+        if (history.length > MAX_HIST) history.shift();
+        drawHistory();
+        }
+
+        // ── HISTORY SPARKLINE ──
+        function drawHistory() {
+        const hc  = document.getElementById('histChart');
+        const hctx = hc.getContext('2d');
+        hc.width  = hc.offsetWidth || 180;
+        hc.height = 60;
+        hctx.clearRect(0,0,hc.width,hc.height);
+        if (history.length < 2) return;
+        const max  = Math.max(...history, 100);
+        const W = hc.width, H = hc.height;
+        const step = W/(MAX_HIST-1);
+
+        hctx.strokeStyle='rgba(255,255,255,0.05)'; hctx.lineWidth=1;
+        for (let g=0;g<=3;g++){const y=H*g/3;hctx.beginPath();hctx.moveTo(0,y);hctx.lineTo(W,y);hctx.stroke();}
+
+        hctx.beginPath();
+        history.forEach((v,i)=>{const x=i*step,y=H-(v/max)*(H-4);i===0?hctx.moveTo(x,y):hctx.lineTo(x,y);});
+        hctx.lineTo((history.length-1)*step,H); hctx.lineTo(0,H); hctx.closePath();
+        const grad=hctx.createLinearGradient(0,0,0,H);
+        grad.addColorStop(0,'rgba(0,212,255,0.4)'); grad.addColorStop(1,'rgba(0,212,255,0.02)');
+        hctx.fillStyle=grad; hctx.fill();
+
+        hctx.beginPath();
+        history.forEach((v,i)=>{const x=i*step,y=H-(v/max)*(H-4);i===0?hctx.moveTo(x,y):hctx.lineTo(x,y);});
+        hctx.strokeStyle='var(--accent)'; hctx.lineWidth=1.5; hctx.stroke();
+        }
+
+        // ── CAPTURE ──
+        function captureFrame() {
+        if (!isRunning) return;
+        if (currentMode === 'ai') {
+        // Capture the AI stream image
+        const img    = document.getElementById('aiStream');
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height= img.naturalHeight || img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        const link = document.createElement('a');
+        link.download = `crackscan_ai_${Date.now()}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+        } else {
+        const canvas = document.getElementById('edgeCanvas');
+        const link = document.createElement('a');
+        link.download = `crackscan_edge_${Date.now()}.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.click();
+        }
+        document.getElementById('statusMsg').textContent = `Frame saved — ${new Date().toLocaleTimeString()}`;
+        }
+
+        window.onbeforeunload = () => {
+        stopAll();
+        fetch('/stop_camera', { method: 'POST' });
+        };
+    </script>
+</body>
+</html>
