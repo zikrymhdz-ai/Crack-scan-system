@@ -3,16 +3,16 @@
   "WorkspaceRootPath": "C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\app.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:app.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\templates\\live.html||{40D31677-CBC0-4297-A9EF-89D907823A98}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:templates\\live.html||{40D31677-CBC0-4297-A9EF-89D907823A98}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\download_model.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:download_model.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\app.py||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:app.py||{3B902123-F8A7-4915-9F01-361F908088D0}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\requirements.txt||{8B382828-6202-11D1-8870-0000F87579D2}",
@@ -42,7 +42,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 3,
           "Children": [
             {
               "$type": "Document",
@@ -58,7 +58,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "download_model.py",
               "DocumentMoniker": "C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\download_model.py",
               "RelativeDocumentMoniker": "download_model.py",
@@ -66,8 +66,7 @@
               "RelativeToolTip": "download_model.py",
               "ViewState": "AgIAAAMAAAAAAAAAAAAgwA8AAAAgAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-03-13T00:52:27.763Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-13T00:52:27.763Z"
             },
             {
               "$type": "Document",
@@ -83,13 +82,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 0,
               "Title": "app.py",
               "DocumentMoniker": "C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\app.py",
               "RelativeDocumentMoniker": "app.py",
               "ToolTip": "C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\app.py",
               "RelativeToolTip": "app.py",
-              "ViewState": "AgIAAFsBAAAAAAAAAAAgwKoBAABOAAAAAAAAAA==",
+              "ViewState": "AgIAAPQBAAAAAAAAAAAgwAoCAABXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-03-13T00:46:32.51Z",
               "EditorCaption": ""
@@ -108,13 +107,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "live.html",
               "DocumentMoniker": "C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\templates\\live.html",
               "RelativeDocumentMoniker": "templates\\live.html",
               "ToolTip": "C:\\Users\\Muhammad Zikry\\OneDrive\\Desktop\\crack_detector\\templates\\live.html",
               "RelativeToolTip": "templates\\live.html",
-              "ViewState": "AgIAAKsDAAAAAAAAAAAAABMFAAAHAAAAAAAAAA==",
+              "ViewState": "AgIAAP0EAAAAAAAAAAAgwBMFAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001512|",
               "WhenOpened": "2026-03-12T23:42:33.64Z",
               "EditorCaption": ""

@@ -395,6 +395,102 @@ def stop_camera():
     return jsonify({'status': 'stopped'})
 
 
+
+# ─────────────────────────────────────────────
+# ANALYZE LIVE FRAME (Browser → Server → AI → Browser)
+# ─────────────────────────────────────────────
+@app.route('/analyze_live', methods=['POST'])
+def analyze_live():
+    from flask import jsonify
+    import base64, re
+    try:
+        data       = request.get_json()
+        image_data = data.get('image', '')
+        # Decode base64 frame
+        img_bytes  = base64.b64decode(re.sub(r'^data:image/.+;base64,', '', image_data))
+        nparr      = np.frombuffer(img_bytes, np.uint8)
+        frame      = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if frame is None:
+            return jsonify({'error': 'Invalid frame'}), 400
+
+        original = frame.copy()
+        gray     = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        h_img, w_img = frame.shape[:2]
+
+        # Edge detection
+        blur       = cv2.GaussianBlur(gray, (5,5), 0)
+        edges      = cv2.Canny(blur, 35, 130)
+        kernel     = np.ones((3,3), np.uint8)
+        crack_mask = cv2.morphologyEx(edges, cv2.MORPH_CLOSE, kernel, iterations=2)
+        crack_mask = cv2.morphologyEx(crack_mask, cv2.MORPH_OPEN, kernel, iterations=1)
+        edge_area  = int(np.sum(crack_mask > 0) / 4)
+        coverage   = round((np.sum(crack_mask > 0) / (w_img * h_img)) * 100, 2)
+
+        # YOLO AI
+        ai_area  = 0
+        ai_boxes = []
+        ai_confs = []
+        if AI_READY and model is not None:
+            try:
+                results = model(frame, conf=0.20, iou=0.45, imgsz=640, verbose=False)
+                result  = results[0]
+                if result.boxes is not None and len(result.boxes) > 0:
+                    for box in result.boxes:
+                        x1,y1,x2,y2 = map(int, box.xyxy[0])
+                        conf = float(box.conf[0])
+                        ai_boxes.append((x1,y1,x2,y2))
+                        ai_confs.append(conf)
+                        ai_area += int((x2-x1)*(y2-y1)*conf*0.4)
+            except Exception as e:
+                print(f"Live AI error: {e}")
+
+        # Hybrid score
+        total_area = int(edge_area*0.45 + ai_area*1.55) if ai_boxes else int(edge_area*0.85)
+        if   total_area < 50:   level = 0; status = "SAFE"
+        elif total_area < 2500: level = 1; status = "MINOR"
+        elif total_area < 8000: level = 2; status = "MEDIUM"
+        else:                   level = 3; status = "SEVERE"
+
+        # Draw overlay
+        out = original.copy()
+        if level > 0:
+            red = original.copy()
+            red[crack_mask == 255] = [0, 0, 255]
+            out = cv2.addWeighted(original, 0.55, red, 0.55, 0)
+
+        for (x1,y1,x2,y2), conf in zip(ai_boxes, ai_confs):
+            cv2.rectangle(out, (x1,y1), (x2,y2), (255,0,200), 2)
+            lbl = f"Crack {conf:.0%}"
+            (lw,lh),_ = cv2.getTextSize(lbl, cv2.FONT_HERSHEY_SIMPLEX, 0.55, 1)
+            cv2.rectangle(out, (x1,y1-lh-8), (x1+lw+6,y1), (255,0,200), -1)
+            cv2.putText(out, lbl, (x1+3,y1-4), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (255,255,255), 1, cv2.LINE_AA)
+
+        banner = {0:(0,160,60), 1:(0,180,180), 2:(0,130,255), 3:(0,0,210)}
+        cv2.rectangle(out, (0,0), (w_img,44), banner[level], -1)
+        cv2.putText(out, f"{status}  |  Area: {total_area}px  |  AI: {len(ai_boxes)} crack(s)",
+                    (10,30), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255,255,255), 2, cv2.LINE_AA)
+
+        tag = f"YOLOv8: {MODEL_NAME}" if AI_READY else "Edge Only"
+        (tw,th),_ = cv2.getTextSize(tag, cv2.FONT_HERSHEY_SIMPLEX, 0.42, 1)
+        cv2.rectangle(out, (w_img-tw-12, h_img-th-14), (w_img, h_img), (0,0,0), -1)
+        cv2.putText(out, tag, (w_img-tw-6, h_img-6), cv2.FONT_HERSHEY_SIMPLEX, 0.42, (160,160,160), 1, cv2.LINE_AA)
+
+        # Encode annotated frame back to base64
+        _, buf = cv2.imencode('.jpg', out, [cv2.IMWRITE_JPEG_QUALITY, 80])
+        annotated_b64 = 'data:image/jpeg;base64,' + base64.b64encode(buf.tobytes()).decode()
+
+        return jsonify({
+            'level':           level,
+            'area':            total_area,
+            'status':          status,
+            'ai_boxes':        len(ai_boxes),
+            'coverage':        str(coverage),
+            'annotated_image': annotated_b64
+        })
+    except Exception as e:
+        print(f"analyze_live error: {e}")
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/history')
 def history():
     try:
