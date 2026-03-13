@@ -21,7 +21,7 @@ MODEL_FILE_ID = "17Xhz_Jygy99Fg5PO2dNfOQhfoKkZFB7M"
 MODEL_NAME    = "wall_crack.pt"
 
 def download_from_gdrive(file_id, dest):
-    url = f"https://drive.google.com/uc?export=download&id=15EjnkQEZ-17Xhz_Jygy99Fg5PO2dNfOQhfoKkZFB7M"
+    url = f"https://drive.google.com/uc?export=download&id={file_id}"
     print(f"⬇️  Downloading {dest} from Google Drive...")
     try:
         urllib.request.urlretrieve(url, dest)
