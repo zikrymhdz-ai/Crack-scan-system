@@ -155,7 +155,6 @@
             font-weight: 600;
             text-decoration: none;
             position: relative;
-            overflow: hidden;
         }
 
             .ctrl-btn::before {
@@ -260,39 +259,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
         }
 
-        /* AI stream — server MJPEG */
-        #aiStream {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 2;
-            display: none;
-        }
-
-            #aiStream.active {
-                display: block;
-            }
-
-        /* Browser edge canvas */
-        #edgeCanvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            z-index: 2;
-            display: none;
-        }
-
-            #edgeCanvas.active {
-                display: block;
-            }
-
-        /* Hidden video for browser edge mode */
+        /* Video (hidden, used to capture frames) */
         #videoEl {
             position: absolute;
             inset: 0;
@@ -302,10 +272,46 @@
             z-index: 1;
         }
 
+        /* Result canvas (shows AI annotated frames back from server) */
+        #resultCanvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 2;
+            display: none;
+        }
+
+            #resultCanvas.active {
+                display: block;
+            }
+
+        /* Hidden capture canvas */
+        #captureCanvas {
+            display: none;
+        }
+
+        /* Thermal colormap overlay */
+        #thermalOverlay {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            display: none;
+            pointer-events: none;
+            mix-blend-mode: hue;
+            background: linear-gradient(135deg, rgba(0,0,255,0.2), rgba(255,0,0,0.2));
+        }
+
+        .thermal-mode #thermalOverlay {
+            display: block;
+        }
+
         .corner {
             position: absolute;
             width: 28px;
             height: 28px;
+            z-index: 5;
         }
 
             .corner.tl {
@@ -344,7 +350,6 @@
             background: linear-gradient(90deg, transparent, var(--accent), transparent);
             z-index: 4;
             opacity: 0;
-            top: 0;
         }
 
             .scan-line.active {
@@ -386,6 +391,133 @@
             background: rgba(0,0,0,0.7);
             border: 1px solid var(--accent);
             color: var(--accent);
+            white-space: nowrap;
+        }
+
+        /* No thermal overlay */
+        #noThermalOverlay {
+            position: absolute;
+            inset: 0;
+            z-index: 20;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            background: rgba(7,11,15,0.96);
+            backdrop-filter: blur(4px);
+        }
+
+            #noThermalOverlay.show {
+                display: flex;
+            }
+
+        .no-thermal-icon {
+            font-size: 3.2em;
+            filter: grayscale(1) opacity(0.5);
+        }
+
+        .no-thermal-title {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 1.5em;
+            font-weight: 700;
+            color: var(--accent2);
+            letter-spacing: 2px;
+        }
+
+        .no-thermal-sub {
+            font-size: 0.82em;
+            color: var(--dim);
+            text-align: center;
+            max-width: 280px;
+            line-height: 1.6;
+        }
+
+        .no-thermal-devices {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px 18px;
+            width: 90%;
+            max-width: 320px;
+        }
+
+        .no-thermal-devices-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.65em;
+            letter-spacing: 3px;
+            color: var(--dim);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .device-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.8em;
+        }
+
+            .device-item:last-child {
+                border-bottom: none;
+            }
+
+        .device-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .device-name {
+            color: var(--text);
+            flex: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .device-type {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.78em;
+            color: var(--dim);
+        }
+
+        .no-thermal-dismiss {
+            padding: 10px 28px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--dim);
+            font-family: 'Exo 2', sans-serif;
+            font-size: 0.85em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+            .no-thermal-dismiss:hover {
+                border-color: var(--accent2);
+                color: var(--accent2);
+            }
+
+        .thermal-scanning {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.75em;
+            color: var(--accent);
+        }
+
+        .scanning-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent);
+            animation: blink 0.6s ease-in-out infinite;
         }
 
         /* Idle overlay */
@@ -424,22 +556,18 @@
             font-size: 0.85em;
             color: var(--dim);
             opacity: 0.6;
+            text-align: center;
+            max-width: 300px;
         }
 
-        /* AI badge on idle */
         .idle-ai-badge {
             font-family: 'Share Tech Mono', monospace;
             font-size: 0.72em;
             padding: 6px 14px;
             border-radius: 6px;
-            border: 1px solid var(--border);
-            color: var(--dim);
+            border: 1px solid var(--safe);
+            color: var(--safe);
         }
-
-            .idle-ai-badge.ready {
-                border-color: var(--safe);
-                color: var(--safe);
-            }
 
         /* Status bar */
         .cam-statusbar {
@@ -498,16 +626,16 @@
                 transition: background 0.4s;
             }
 
+            .severity-card.minor::before {
+                background: #88ff00;
+            }
+
             .severity-card.warn::before {
                 background: var(--warn);
             }
 
             .severity-card.danger::before {
                 background: var(--accent2);
-            }
-
-            .severity-card.minor::before {
-                background: #88ff00;
             }
 
         .sev-label {
@@ -549,22 +677,10 @@
 
         .sev-bar {
             height: 100%;
-            width: 0%;
+            width: 5%;
             background: var(--safe);
             border-radius: 2px;
             transition: width 0.4s, background 0.4s;
-        }
-
-        .severity-card.minor .sev-bar {
-            background: #88ff00;
-        }
-
-        .severity-card.warn .sev-bar {
-            background: var(--warn);
-        }
-
-        .severity-card.danger .sev-bar {
-            background: var(--accent2);
         }
 
         .metric-grid {
@@ -609,6 +725,37 @@
             display: block;
         }
 
+        .ai-info {
+            background: var(--panel2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 12px;
+        }
+
+        .ai-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            font-size: 0.8em;
+        }
+
+            .ai-row:last-child {
+                border-bottom: none;
+            }
+
+        .ai-key {
+            color: var(--dim);
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 0.85em;
+        }
+
+        .ai-val {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 700;
+        }
+
         .legend {
             background: var(--panel2);
             border: 1px solid var(--border);
@@ -646,38 +793,6 @@
             font-size: 0.85em;
         }
 
-        /* AI info box */
-        .ai-info {
-            background: var(--panel2);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 12px;
-        }
-
-        .ai-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 5px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            font-size: 0.8em;
-        }
-
-            .ai-row:last-child {
-                border-bottom: none;
-            }
-
-        .ai-key {
-            color: var(--dim);
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 0.85em;
-        }
-
-        .ai-val {
-            font-family: 'Rajdhani', sans-serif;
-            font-weight: 700;
-        }
-
         @media (max-width: 900px) {
             .app {
                 grid-template-columns: 72px 1fr 72px;
@@ -700,6 +815,37 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        @media (max-width: 580px) {
+            .app {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+                height: auto;
+            }
+
+            .left-panel {
+                flex-direction: row;
+                padding: 10px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                overflow-x: auto;
+            }
+
+            .right-panel {
+                flex-direction: row;
+                flex-wrap: wrap;
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+
+            .center-panel {
+                min-height: 50vh;
+            }
+
+            .divider {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -714,18 +860,18 @@
 
         <!-- LEFT PANEL -->
         <aside class="left-panel">
-            <div class="panel-label">Mode</div>
+            <div class="panel-label">Camera</div>
 
-            <button class="ctrl-btn active" id="btnAI" onclick="setMode('ai')">
+            <button class="ctrl-btn active" id="btnRGB" onclick="setMode('rgb')">
                 <span class="btn-num">1</span>
-                <span class="btn-icon">🤖</span>
-                <span class="btn-text">AI Stream<br><span class="btn-sub">YOLOv8 Server</span></span>
+                <span class="btn-icon">📷</span>
+                <span class="btn-text">RGB<br><span class="btn-sub">Normal + AI</span></span>
             </button>
 
-            <button class="ctrl-btn" id="btnEdge" onclick="setMode('edge')">
+            <button class="ctrl-btn" id="btnThermal" onclick="setMode('thermal')">
                 <span class="btn-num">2</span>
-                <span class="btn-icon">⬡</span>
-                <span class="btn-text">Edge Only<br><span class="btn-sub">Browser</span></span>
+                <span class="btn-icon">🌡️</span>
+                <span class="btn-text">Thermal<br><span class="btn-sub">IR + AI</span></span>
             </button>
 
             <div class="divider"></div>
@@ -756,8 +902,9 @@
         <main class="center-panel">
             <div class="camera-wrap" id="cameraInner">
                 <video id="videoEl" autoplay muted playsinline></video>
-                <img id="aiStream" src="" alt="AI Stream">
-                <canvas id="edgeCanvas"></canvas>
+                <canvas id="resultCanvas"></canvas>
+                <canvas id="captureCanvas"></canvas>
+                <div id="thermalOverlay"></div>
 
                 <div class="corner tl"></div>
                 <div class="corner tr"></div>
@@ -766,13 +913,27 @@
                 <div class="scan-line" id="scanLine"></div>
                 <div class="mode-badge" id="modeBadge">SELECT MODE</div>
 
+                <!-- No Thermal overlay -->
+                <div id="noThermalOverlay">
+                    <div class="no-thermal-icon">🌡️</div>
+                    <div class="no-thermal-title">NO THERMAL CAMERA</div>
+                    <div class="no-thermal-sub">No thermal or infrared camera detected. Thermal mode requires a dedicated IR/thermal sensor.</div>
+                    <div class="no-thermal-devices">
+                        <div class="no-thermal-devices-title">Detected Cameras</div>
+                        <div id="deviceList"><div style="color:var(--dim);font-size:0.8em">Scanning…</div></div>
+                    </div>
+                    <div class="thermal-scanning" id="thermalScanStatus">
+                        <div class="scanning-dot"></div> Scanning for thermal sensors…
+                    </div>
+                    <button class="no-thermal-dismiss" onclick="dismissNoThermal()">↩ Back to RGB</button>
+                </div>
+
+                <!-- Idle overlay -->
                 <div id="idleOverlay">
                     <div class="idle-icon">⬡</div>
                     <div class="idle-text">CRACKSCAN READY</div>
-                    <div class="idle-sub">Press START to begin live detection</div>
-                    <div class="idle-ai-badge {% if ai_ready %}ready{% endif %}" id="aiBadge">
-                        {% if ai_ready %}✅ AI: {{ model_name }}{% else %}⚠️ Edge Detection Only{% endif %}
-                    </div>
+                    <div class="idle-sub">Select RGB or Thermal, then press Start Analysis</div>
+                    <div class="idle-ai-badge">✅ AI: {{ model_name if ai_ready else 'Edge Only' }}</div>
                 </div>
             </div>
 
@@ -782,14 +943,13 @@
                 <span id="modeText">—</span>
                 <span class="sep">|</span>
                 <span id="fpsText">0 FPS</span>
-                <span class="frame-counter" id="frameCount">AI Boxes: 0</span>
+                <span class="frame-counter" id="aiBoxCount">AI Boxes: 0</span>
             </div>
         </main>
 
         <!-- RIGHT PANEL -->
         <aside class="right-panel">
             <div class="panel-label">Severity</div>
-
             <div class="severity-card" id="severityCard">
                 <div class="sev-label">Status</div>
                 <div class="sev-value" id="sevValue">SAFE</div>
@@ -797,364 +957,344 @@
             </div>
 
             <div class="metric-grid">
-                <div class="metric">
-                    <div class="metric-label">Area</div>
-                    <div class="metric-value" id="metArea">0 px</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Level</div>
-                    <div class="metric-value" id="metLevel">0 / 3</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">Coverage</div>
-                    <div class="metric-value" id="metCoverage">0.0%</div>
-                </div>
-                <div class="metric">
-                    <div class="metric-label">AI Boxes</div>
-                    <div class="metric-value" id="metBoxes">0</div>
-                </div>
+                <div class="metric"><div class="metric-label">Area</div><div class="metric-value" id="metArea">0 px</div></div>
+                <div class="metric"><div class="metric-label">Level</div><div class="metric-value" id="metLevel">0 / 3</div></div>
+                <div class="metric"><div class="metric-label">Coverage</div><div class="metric-value" id="metCoverage">0.0%</div></div>
+                <div class="metric"><div class="metric-label">AI Boxes</div><div class="metric-value" id="metBoxes">0</div></div>
             </div>
 
-            <!-- History sparkline -->
             <div class="history-wrap">
                 <div class="panel-label" style="margin-bottom:6px">Crack History</div>
                 <canvas id="histChart"></canvas>
             </div>
 
-            <!-- AI info -->
             <div class="ai-info">
                 <div class="panel-label" style="margin-bottom:6px">Detection Info</div>
-                <div class="ai-row">
-                    <span class="ai-key">MODEL</span>
-                    <span class="ai-val" id="infoModel">{{ model_name if ai_ready else 'Edge Only' }}</span>
-                </div>
-                <div class="ai-row">
-                    <span class="ai-key">MODE</span>
-                    <span class="ai-val" id="infoMode">—</span>
-                </div>
-                <div class="ai-row">
-                    <span class="ai-key">FPS</span>
-                    <span class="ai-val" id="infoFps">0</span>
-                </div>
-                <div class="ai-row">
-                    <span class="ai-key">STATUS</span>
-                    <span class="ai-val" id="infoStatus" style="color:var(--safe)">IDLE</span>
-                </div>
+                <div class="ai-row"><span class="ai-key">MODEL</span><span class="ai-val" id="infoModel">{{ model_name if ai_ready else 'Edge' }}</span></div>
+                <div class="ai-row"><span class="ai-key">CAMERA</span><span class="ai-val" id="infoCamera">—</span></div>
+                <div class="ai-row"><span class="ai-key">FPS</span><span class="ai-val" id="infoFps">0</span></div>
+                <div class="ai-row"><span class="ai-key">STATUS</span><span class="ai-val" id="infoStatus" style="color:var(--safe)">IDLE</span></div>
             </div>
 
-            <!-- Legend -->
             <div class="legend">
                 <div class="panel-label" style="margin-bottom:6px">Severity Guide</div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:var(--safe)"></div>
-                    <span class="legend-name" style="color:var(--safe)">Safe</span>
-                    <span class="legend-desc">No cracks</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:#88ff00"></div>
-                    <span class="legend-name" style="color:#88ff00">Minor</span>
-                    <span class="legend-desc">&lt;50px hairline</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:var(--warn)"></div>
-                    <span class="legend-name" style="color:var(--warn)">Medium</span>
-                    <span class="legend-desc">50–8k px</span>
-                </div>
-                <div class="legend-item">
-                    <div class="legend-dot" style="background:var(--accent2)"></div>
-                    <span class="legend-name" style="color:var(--accent2)">Severe</span>
-                    <span class="legend-desc">&gt;8k px — Act now</span>
-                </div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--safe)"></div><span class="legend-name" style="color:var(--safe)">Safe</span><span class="legend-desc">No cracks</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:#88ff00"></div><span class="legend-name" style="color:#88ff00">Minor</span><span class="legend-desc">&lt;50px</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--warn)"></div><span class="legend-name" style="color:var(--warn)">Medium</span><span class="legend-desc">50–8k px</span></div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div><span class="legend-name" style="color:var(--accent2)">Severe</span><span class="legend-desc">&gt;8k px</span></div>
             </div>
         </aside>
     </div>
 
     <script>
         // ── STATE ──
-        let currentMode  = 'ai';   // 'ai' | 'edge'
-        let isRunning    = false;
-        let statsInterval = null;
-        let edgeAnimId   = null;
-        let edgeStream   = null;
-        let history      = [];
-        const MAX_HIST   = 60;
+        let currentMode   = 'rgb';
+        let isRunning     = false;
+        let camStream     = null;
+        let thermalDeviceId = null;
+        let sendInterval  = null;
+        let isSending     = false;
+        let frameCount    = 0;
+        let lastFpsTime   = performance.now();
+        let history       = [];
+        const MAX_HIST    = 60;
+        const SEND_FPS    = 3; // send 3 frames/sec to server for AI
+
+        const video       = document.getElementById('videoEl');
+        const resultCanvas = document.getElementById('resultCanvas');
+        const captureCanvas = document.getElementById('captureCanvas');
+        const rctx        = resultCanvas.getContext('2d');
+
+        // ── THERMAL KEYWORDS ──
+        const THERMAL_KEYWORDS = ['thermal','infrared','ir camera','flir','lepton','seek','heat','infiray','topdon','boson'];
 
         // ── CLOCK ──
-        function tick() { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }
-        setInterval(tick, 1000); tick();
+        setInterval(() => { document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB'); }, 1000);
+        document.getElementById('clock').textContent = new Date().toLocaleTimeString('en-GB');
+
+        // ── THERMAL DETECTION ──
+        async function enumerateCameras() {
+        try {
+        const tmp = await navigator.mediaDevices.getUserMedia({ video: true }).catch(() => null);
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        if (tmp) tmp.getTracks().forEach(t => t.stop());
+        return devices.filter(d => d.kind === 'videoinput');
+        } catch(e) { return []; }
+        }
+
+        function isThermalDevice(d) {
+        return THERMAL_KEYWORDS.some(kw => (d.label||'').toLowerCase().includes(kw));
+        }
+
+        function renderDeviceList(devices) {
+        const list = document.getElementById('deviceList');
+        if (!devices.length) { list.innerHTML = '<div style="color:var(--dim);font-size:0.8em">No cameras found</div>'; return; }
+        list.innerHTML = devices.map(d => {
+        const thermal = isThermalDevice(d);
+        const label = d.label || `Camera ${d.deviceId.slice(0,6)}…`;
+        return `<div class="device-item">
+        <div class="device-dot" style="background:${thermal?'var(--warn)':'var(--dim)'}"></div>
+        <span class="device-name">${label}</span>
+        <span class="device-type">${thermal?'THERMAL':'RGB'}</span>
+        </div>`;
+        }).join('');
+        }
+
+        async function checkThermalCamera() {
+        document.getElementById('thermalScanStatus').innerHTML = '<div class="scanning-dot"></div> Scanning for thermal sensors…';
+        const devices = await enumerateCameras();
+        renderDeviceList(devices);
+        const found = devices.find(d => isThermalDevice(d));
+        thermalDeviceId = found ? found.deviceId : null;
+        if (thermalDeviceId) {
+        document.getElementById('thermalScanStatus').innerHTML = '✅ Thermal camera found — connecting…';
+        return true;
+        } else {
+        document.getElementById('thermalScanStatus').innerHTML = '❌ No thermal camera detected';
+        return false;
+        }
+        }
 
         // ── MODE SWITCH ──
-        function setMode(mode) {
-        currentMode = mode;
-        document.getElementById('btnAI').classList.toggle('active', mode === 'ai');
-        document.getElementById('btnEdge').classList.toggle('active', mode === 'edge');
-        document.getElementById('modeBadge').textContent = mode === 'ai' ? 'AI MODE — YOLOv8' : 'EDGE MODE — Browser';
-        document.getElementById('infoMode').textContent  = mode === 'ai' ? 'Server AI' : 'Browser Edge';
-        document.getElementById('modeText').textContent  = mode === 'ai' ? 'AI Stream' : 'Edge Only';
-
-        if (isRunning) {
-        stopAll();
-        setTimeout(() => startAll(), 300);
+        async function setMode(mode) {
+        if (mode === 'thermal') {
+        document.getElementById('noThermalOverlay').classList.add('show');
+        document.getElementById('deviceList').innerHTML = '<div style="color:var(--dim);font-size:0.8em">Scanning…</div>';
+        const hasThermal = await checkThermalCamera();
+        if (hasThermal) {
+        setTimeout(() => document.getElementById('noThermalOverlay').classList.remove('show'), 800);
+        currentMode = 'thermal';
+        document.getElementById('btnRGB').classList.remove('active');
+        document.getElementById('btnThermal').classList.add('active');
+        document.getElementById('cameraInner').classList.add('thermal-mode');
+        document.getElementById('modeBadge').textContent = 'THERMAL MODE — IR + AI';
+        document.getElementById('modeBadge').style.borderColor = '#ff6600';
+        document.getElementById('modeBadge').style.color = '#ff6600';
+        document.getElementById('modeText').textContent = 'Thermal';
+        document.getElementById('infoCamera').textContent = 'Thermal';
+        if (isRunning) { stopStream(); setTimeout(startStream, 300); }
         }
+        } else {
+        currentMode = 'rgb';
+        thermalDeviceId = null;
+        document.getElementById('btnRGB').classList.add('active');
+        document.getElementById('btnThermal').classList.remove('active');
+        document.getElementById('cameraInner').classList.remove('thermal-mode');
+        document.getElementById('noThermalOverlay').classList.remove('show');
+        document.getElementById('modeBadge').textContent = 'RGB MODE — Camera + AI';
+        document.getElementById('modeBadge').style.borderColor = '';
+        document.getElementById('modeBadge').style.color = '';
+        document.getElementById('modeText').textContent = 'RGB';
+        document.getElementById('infoCamera').textContent = 'RGB';
+        if (isRunning) { stopStream(); setTimeout(startStream, 300); }
+        }
+        }
+
+        function dismissNoThermal() {
+        document.getElementById('noThermalOverlay').classList.remove('show');
+        document.getElementById('btnRGB').classList.add('active');
+        document.getElementById('btnThermal').classList.remove('active');
+        currentMode = 'rgb';
         }
 
         // ── TOGGLE START/STOP ──
         function toggleStream() {
-        if (!isRunning) startAll(); else stopAll();
+        if (!isRunning) startStream(); else stopStream();
         }
 
-        function startAll() {
+        async function startStream() {
         isRunning = true;
+        document.getElementById('statusMsg').textContent = 'Starting camera…';
+
+        try {
+        if (camStream) camStream.getTracks().forEach(t => t.stop());
+
+        // Pick correct camera
+        const constraints = (currentMode === 'thermal' && thermalDeviceId)
+        ? { video: { deviceId: { exact: thermalDeviceId } } }
+        : { video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:720} } };
+
+        camStream = await navigator.mediaDevices.getUserMedia(constraints);
+        video.srcObject = camStream;
+
+        video.onloadedmetadata = () => {
         document.getElementById('idleOverlay').classList.add('hidden');
         document.getElementById('liveBadge').classList.add('active');
         document.getElementById('scanLine').classList.add('active');
         document.getElementById('btnCapture').classList.remove('disabled');
+        document.getElementById('infoStatus').textContent = 'RUNNING';
+        document.getElementById('infoStatus').style.color = 'var(--accent2)';
+        resultCanvas.classList.add('active');
+
         const btn = document.getElementById('btnStart');
         btn.innerHTML = `<span class="btn-num">3</span><span class="btn-icon">⏹</span><span class="btn-text">Stop<br><span class="btn-sub">Analysis</span></span>`;
         btn.classList.add('pulsing');
-        document.getElementById('infoStatus').textContent = 'RUNNING';
-        document.getElementById('infoStatus').style.color = 'var(--accent2)';
 
-        if (currentMode === 'ai') startAIStream();
-        else startEdgeStream();
+        document.getElementById('statusMsg').textContent =
+        currentMode === 'thermal' ? 'Thermal camera active — AI running' : 'RGB camera active — AI running';
+
+        // Start sending frames to server every ~333ms (3 FPS)
+        sendInterval = setInterval(sendFrameToServer, 1000 / SEND_FPS);
+
+        // Show live video immediately while waiting for AI results
+        showLiveVideo();
+        };
+        } catch(e) {
+        isRunning = false;
+        document.getElementById('statusMsg').textContent = `Camera error: ${e.name} — ${e.message}`;
+        document.getElementById('idleOverlay').classList.remove('hidden');
+        }
         }
 
-        function stopAll() {
+        function stopStream() {
         isRunning = false;
-        stopAIStream();
-        stopEdgeStream();
+        if (sendInterval) { clearInterval(sendInterval); sendInterval = null; }
+        if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
         document.getElementById('idleOverlay').classList.remove('hidden');
         document.getElementById('liveBadge').classList.remove('active');
         document.getElementById('scanLine').classList.remove('active');
         document.getElementById('btnCapture').classList.add('disabled');
+        resultCanvas.classList.remove('active');
         const btn = document.getElementById('btnStart');
         btn.innerHTML = `<span class="btn-num">3</span><span class="btn-icon">▶</span><span class="btn-text">Start<br><span class="btn-sub">Analysis</span></span>`;
         btn.classList.remove('pulsing');
         document.getElementById('statusMsg').textContent = 'Stopped';
         document.getElementById('infoStatus').textContent = 'IDLE';
         document.getElementById('infoStatus').style.color = 'var(--safe)';
-        fetch('/stop_camera', { method: 'POST' });
         }
 
-        // ── AI STREAM (Option B) ──
-        function startAIStream() {
-        const img = document.getElementById('aiStream');
-        const canvas = document.getElementById('edgeCanvas');
-        img.src = '/video_feed?' + Date.now();
-        img.classList.add('active');
-        canvas.classList.remove('active');
-        document.getElementById('statusMsg').textContent = 'AI stream active — YOLOv8 running';
-
-        // Poll stats from server every 500ms
-        statsInterval = setInterval(fetchStats, 500);
+        // ── SHOW LIVE VIDEO on canvas (while waiting for AI) ──
+        function showLiveVideo() {
+        function drawLoop() {
+        if (!isRunning) return;
+        if (video.videoWidth && !isSending) {
+        resultCanvas.width  = video.videoWidth;
+        resultCanvas.height = video.videoHeight;
+        rctx.drawImage(video, 0, 0);
+        }
+        requestAnimationFrame(drawLoop);
+        }
+        drawLoop();
         }
 
-        function stopAIStream() {
-        const img = document.getElementById('aiStream');
-        img.src = '';
-        img.classList.remove('active');
-        if (statsInterval) { clearInterval(statsInterval); statsInterval = null; }
-        }
-
-        async function fetchStats() {
-        try {
-        const res  = await fetch('/live_stats');
-        const data = await res.json();
-        updateUI(data.level, data.area, data.coverage, data.ai_boxes, data.fps);
-        document.getElementById('statusMsg').textContent =
-        `AI active — ${data.status} | ${data.fps} FPS`;
-        } catch(e) {}
-        }
-
-        // ── EDGE STREAM (Browser fallback) ──
-        async function startEdgeStream() {
-        const canvas = document.getElementById('edgeCanvas');
-        const video  = document.getElementById('videoEl');
-        const img    = document.getElementById('aiStream');
-        img.classList.remove('active');
-        canvas.classList.add('active');
+        // ── SEND FRAME TO SERVER FOR AI ANALYSIS ──
+        async function sendFrameToServer() {
+        if (!isRunning || isSending || !video.videoWidth) return;
+        isSending = true;
 
         try {
-        edgeStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment', width:{ideal:1280}, height:{ideal:720} }
+        // Capture current frame
+        captureCanvas.width  = video.videoWidth;
+        captureCanvas.height = video.videoHeight;
+        const cctx = captureCanvas.getContext('2d');
+        cctx.drawImage(video, 0, 0);
+        const frameData = captureCanvas.toDataURL('image/jpeg', 0.7);
+
+        // Send to server
+        const response = await fetch('/analyze_live', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+        image: frameData,
+        mode: currentMode
+        })
         });
-        video.srcObject = edgeStream;
-        video.onloadedmetadata = () => {
-        document.getElementById('statusMsg').textContent = 'Edge detection active — browser mode';
-        runEdgeLoop();
+
+        if (response.ok) {
+        const data = await response.json();
+
+        // Draw annotated result on canvas
+        if (data.annotated_image) {
+        const img = new Image();
+        img.onload = () => {
+        resultCanvas.width  = img.width;
+        resultCanvas.height = img.height;
+        rctx.drawImage(img, 0, 0);
         };
-        } catch(e) {
-        document.getElementById('statusMsg').textContent = `Camera error: ${e.name}`;
-        }
+        img.src = data.annotated_image;
         }
 
-        function stopEdgeStream() {
-        if (edgeAnimId) { cancelAnimationFrame(edgeAnimId); edgeAnimId = null; }
-        if (edgeStream) { edgeStream.getTracks().forEach(t => t.stop()); edgeStream = null; }
-        document.getElementById('edgeCanvas').classList.remove('active');
-        }
+        // Update stats
+        updateUI(data.level, data.area, data.coverage, data.ai_boxes);
 
-        function runEdgeLoop() {
-        const canvas = document.getElementById('edgeCanvas');
-        const ctx    = canvas.getContext('2d');
-        const video  = document.getElementById('videoEl');
-        let frameCount = 0, lastFps = performance.now();
-
-        function loop() {
-        if (!isRunning || currentMode !== 'edge') return;
-        if (!video.videoWidth) { edgeAnimId = requestAnimationFrame(loop); return; }
-
-        canvas.width  = video.videoWidth;
-        canvas.height = video.videoHeight;
-        ctx.drawImage(video, 0, 0);
-
-        const W = canvas.width, H = canvas.height;
-        const imgData = ctx.getImageData(0,0,W,H);
-        const px = imgData.data;
-
-        // Grayscale
-        const gray = new Uint8Array(W*H);
-        for (let i=0; i<px.length; i+=4)
-        gray[i>>2] = (px[i]*0.3 + px[i+1]*0.59 + px[i+2]*0.11)|0;
-
-        // Blur
-        const blur = new Uint8Array(gray);
-        for (let y=2;y<H-2;y++) for (let x=2;x<W-2;x++) {
-        let s=0,w=0;
-        for (let dy=-2;dy<=2;dy++) for (let dx=-2;dx<=2;dx++) {
-        const wt=6-Math.abs(dx)-Math.abs(dy);
-        s+=gray[(y+dy)*W+(x+dx)]*wt; w+=wt;
-        }
-        blur[y*W+x]=s/w;
-        }
-
-        // Sobel
-        const edges = new Uint8Array(W*H);
-        const sx=[-1,0,1,-2,0,2,-1,0,1], sy=[-1,-2,-1,0,0,0,1,2,1];
-        for (let y=1;y<H-1;y++) for (let x=1;x<W-1;x++) {
-        let gx=0,gy=0;
-        for (let k=0;k<9;k++) {
-        const idx=(y-1+~~(k/3))*W+(x-1+(k%3));
-        gx+=blur[idx]*sx[k]; gy+=blur[idx]*sy[k];
-        }
-        edges[y*W+x]=Math.sqrt(gx*gx+gy*gy)>50?255:0;
-        }
-
-        // Morphology
-        function dilate(img){const r=new Uint8Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const nb=[img[(y-1)*W+x-1],img[(y-1)*W+x],img[(y-1)*W+x+1],img[y*W+x-1],img[y*W+x],img[y*W+x+1],img[(y+1)*W+x-1],img[(y+1)*W+x],img[(y+1)*W+x+1]];r[y*W+x]=nb.some(v=>v===255)?255:0;}return r;}
-        function erode(img){const r=new Uint8Array(W*H);for(let y=1;y<H-1;y++)for(let x=1;x<W-1;x++){const nb=[img[(y-1)*W+x-1],img[(y-1)*W+x],img[(y-1)*W+x+1],img[y*W+x-1],img[y*W+x],img[y*W+x+1],img[(y+1)*W+x-1],img[(y+1)*W+x],img[(y+1)*W+x+1]];r[y*W+x]=nb.every(v=>v===255)?255:0;}return r;}
-        const final = erode(dilate(edges));
-
-        let crackPx = 0;
-        for (let i=0;i<final.length;i++) {
-        if (final[i]===255) {
-        crackPx++;
-        ctx.fillStyle='rgba(255,30,30,0.75)';
-        ctx.fillRect(i%W, ~~(i/W), 1, 1);
-        }
-        }
-
-        const area     = Math.round(crackPx/4);
-        const coverage = ((crackPx/(W*H))*100).toFixed(2);
-        const level    = area<50?0:area<2500?1:area<8000?2:3;
-        updateUI(level, area, coverage, 0, 0);
-
+        // FPS counter
         frameCount++;
         const now = performance.now();
-        if (now - lastFps > 1000) {
-        const fps = Math.round(frameCount/((now-lastFps)/1000));
+        if (now - lastFpsTime >= 1000) {
+        const fps = Math.round(frameCount / ((now - lastFpsTime) / 1000));
         document.getElementById('fpsText').textContent = `${fps} FPS`;
         document.getElementById('infoFps').textContent = fps;
-        lastFps=now; frameCount=0;
+        frameCount = 0; lastFpsTime = now;
         }
-        edgeAnimId = requestAnimationFrame(loop);
         }
-        loop();
+        } catch(e) {
+        console.error('Send frame error:', e);
+        }
+        isSending = false;
         }
 
         // ── UI UPDATE ──
-        function updateUI(level, area, coverage, aiBoxes, fps) {
-        const card = document.getElementById('severityCard');
+        function updateUI(level, area, coverage, aiBoxes) {
+        const card   = document.getElementById('severityCard');
         const sevVal = document.getElementById('sevValue');
         const sevBar = document.getElementById('sevBar');
-        const labels = ['SAFE','MINOR','MEDIUM','SEVERE'];
+        const labels  = ['SAFE','MINOR','MEDIUM','SEVERE'];
         const classes = ['','minor','warn','danger'];
-        const barW = ['5%','33%','66%','100%'];
+        const barW    = ['5%','33%','66%','100%'];
+        const colors  = ['var(--safe)','#88ff00','var(--warn)','var(--accent2)'];
 
-        card.className = 'severity-card ' + (classes[level]||'');
-        sevVal.textContent  = labels[level];
-        sevBar.style.width  = barW[level];
+        card.className = 'severity-card ' + (classes[level] || '');
+        sevVal.textContent = labels[level];
+        sevVal.style.color = colors[level];
+        sevBar.style.width = barW[level];
+        sevBar.style.background = colors[level];
 
-        document.getElementById('metArea').textContent     = area>999?`${(area/1000).toFixed(1)}k px`:`${area} px`;
+        document.getElementById('metArea').textContent     = area > 999 ? `${(area/1000).toFixed(1)}k` : `${area} px`;
         document.getElementById('metLevel').textContent    = `${level} / 3`;
         document.getElementById('metCoverage').textContent = `${coverage}%`;
         document.getElementById('metBoxes').textContent    = aiBoxes;
-        document.getElementById('frameCount').textContent  = `AI Boxes: ${aiBoxes}`;
-        if (fps) {
-        document.getElementById('fpsText').textContent = `${fps} FPS`;
-        document.getElementById('infoFps').textContent = fps;
-        }
+        document.getElementById('aiBoxCount').textContent  = `AI Boxes: ${aiBoxes}`;
 
         history.push(area);
         if (history.length > MAX_HIST) history.shift();
         drawHistory();
         }
 
-        // ── HISTORY SPARKLINE ──
+        // ── SPARKLINE ──
         function drawHistory() {
-        const hc  = document.getElementById('histChart');
+        const hc   = document.getElementById('histChart');
         const hctx = hc.getContext('2d');
-        hc.width  = hc.offsetWidth || 180;
-        hc.height = 60;
-        hctx.clearRect(0,0,hc.width,hc.height);
+        hc.width   = hc.offsetWidth || 180;
+        hc.height  = 60;
+        hctx.clearRect(0, 0, hc.width, hc.height);
         if (history.length < 2) return;
         const max  = Math.max(...history, 100);
         const W = hc.width, H = hc.height;
-        const step = W/(MAX_HIST-1);
-
-        hctx.strokeStyle='rgba(255,255,255,0.05)'; hctx.lineWidth=1;
-        for (let g=0;g<=3;g++){const y=H*g/3;hctx.beginPath();hctx.moveTo(0,y);hctx.lineTo(W,y);hctx.stroke();}
-
+        const step = W / (MAX_HIST - 1);
+        hctx.strokeStyle = 'rgba(255,255,255,0.05)'; hctx.lineWidth = 1;
+        for (let g=0; g<=3; g++) { const y=H*g/3; hctx.beginPath(); hctx.moveTo(0,y); hctx.lineTo(W,y); hctx.stroke(); }
         hctx.beginPath();
-        history.forEach((v,i)=>{const x=i*step,y=H-(v/max)*(H-4);i===0?hctx.moveTo(x,y):hctx.lineTo(x,y);});
-        hctx.lineTo((history.length-1)*step,H); hctx.lineTo(0,H); hctx.closePath();
-        const grad=hctx.createLinearGradient(0,0,0,H);
+        history.forEach((v,i) => { const x=i*step, y=H-(v/max)*(H-4); i===0?hctx.moveTo(x,y):hctx.lineTo(x,y); });
+        hctx.lineTo((history.length-1)*step, H); hctx.lineTo(0, H); hctx.closePath();
+        const grad = hctx.createLinearGradient(0,0,0,H);
         grad.addColorStop(0,'rgba(0,212,255,0.4)'); grad.addColorStop(1,'rgba(0,212,255,0.02)');
-        hctx.fillStyle=grad; hctx.fill();
-
+        hctx.fillStyle = grad; hctx.fill();
         hctx.beginPath();
-        history.forEach((v,i)=>{const x=i*step,y=H-(v/max)*(H-4);i===0?hctx.moveTo(x,y):hctx.lineTo(x,y);});
-        hctx.strokeStyle='var(--accent)'; hctx.lineWidth=1.5; hctx.stroke();
+        history.forEach((v,i) => { const x=i*step, y=H-(v/max)*(H-4); i===0?hctx.moveTo(x,y):hctx.lineTo(x,y); });
+        hctx.strokeStyle = 'var(--accent)'; hctx.lineWidth = 1.5; hctx.stroke();
         }
 
         // ── CAPTURE ──
         function captureFrame() {
         if (!isRunning) return;
-        if (currentMode === 'ai') {
-        // Capture the AI stream image
-        const img    = document.getElementById('aiStream');
-        const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height= img.naturalHeight || img.height;
-        canvas.getContext('2d').drawImage(img, 0, 0);
         const link = document.createElement('a');
-        link.download = `crackscan_ai_${Date.now()}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.92);
+        link.download = `crackscan_${currentMode}_${Date.now()}.jpg`;
+        link.href = resultCanvas.toDataURL('image/jpeg', 0.92);
         link.click();
-        } else {
-        const canvas = document.getElementById('edgeCanvas');
-        const link = document.createElement('a');
-        link.download = `crackscan_edge_${Date.now()}.jpg`;
-        link.href = canvas.toDataURL('image/jpeg', 0.92);
-        link.click();
-        }
         document.getElementById('statusMsg').textContent = `Frame saved — ${new Date().toLocaleTimeString()}`;
         }
 
-        window.onbeforeunload = () => {
-        stopAll();
-        fetch('/stop_camera', { method: 'POST' });
-        };
+        window.onbeforeunload = () => stopStream();
     </script>
 </body>
 </html>

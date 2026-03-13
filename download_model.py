@@ -1,43 +1,33 @@
-﻿"""
-download_model.py
-Run this once on Render startup to pull model weights.
-Add to Render Build Command:
-  pip install -r requirements.txt && python download_model.py
-"""
+﻿import os
+import gdown
 
-import os
-import urllib.request
-
-# ─────────────────────────────────────────────────────────
-# PASTE YOUR GOOGLE DRIVE DIRECT DOWNLOAD LINK BELOW
-# How to get it:
-#   1. Upload best_crack.pt to Google Drive
-#   2. Right-click → Share → Anyone with the link
-#   3. Copy the file ID from the share URL:
-#      https://drive.google.com/file/d/FILE_ID_HERE/view
-#   4. Replace FILE_ID_HERE below
-# ─────────────────────────────────────────────────────────
 MODEL_FILE_ID = "17Xhz_Jygy99Fg5PO2dNfOQhfoKkZFB7M"
 MODEL_NAME    = "wall_crack.pt"
 
-def download_from_gdrive(file_id, dest):
-    url = f"https://drive.google.com/uc?export=download&id={file_id}"
-    print(f"⬇️  Downloading {dest} from Google Drive...")
-    try:
-        urllib.request.urlretrieve(url, dest)
-        size_mb = os.path.getsize(dest) / 1024 / 1024
-        print(f"✅ Downloaded {dest} ({size_mb:.1f} MB)")
-    except Exception as e:
-        print(f"❌ Download failed: {e}")
-
 if __name__ == "__main__":
     os.makedirs("uploads", exist_ok=True)
-
     if not os.path.exists(MODEL_NAME):
-        if MODEL_FILE_ID == "FILE_ID_HERE":
-            print("⚠️  No Google Drive file ID set — skipping model download.")
-            print("   App will use yolov8n.pt (auto-downloaded by ultralytics)")
+        print(f"⬇️  Downloading {MODEL_NAME} from Google Drive...")
+        gdown.download(id=MODEL_FILE_ID, output=MODEL_NAME, quiet=False)
+        if os.path.exists(MODEL_NAME):
+            size_mb = os.path.getsize(MODEL_NAME) / 1024 / 1024
+            print(f"✅ Downloaded {MODEL_NAME} ({size_mb:.1f} MB)")
         else:
-            download_from_gdrive(MODEL_FILE_ID, MODEL_NAME)
+            print("❌ Download failed — app will use yolov8n.pt fallback")
     else:
         print(f"✅ Model already exists: {MODEL_NAME}")
+```
+Save.
+
+**Step 3 — Push:**
+```
+git add .
+git commit -m "fix model download using gdown"
+git push
+```
+
+---
+
+**But for now your app is already live and working with yolov8n.pt!** Open it and test:
+```
+https://crackscansystem.onrender.com
